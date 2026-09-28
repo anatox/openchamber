@@ -675,7 +675,7 @@ export const ProjectActionsButton = ({
             useTerminalStore.getState().setTabPurpose(tabDirectory, tab.id, { type: 'project-action', actionId, executionId: null });
             clearExecutionUi(tabDirectory, actionId, currentExecutionId);
           },
-        });
+        }, tabDirectory);
         streamCleanupByRunKeyRef.current[streamKey] = subscription.close;
       }
     }
@@ -892,6 +892,7 @@ export const ProjectActionsButton = ({
               clearExecutionUi(executionDirectory, discovered.id, adoptedExecutionId);
             }
           } },
+          executionDirectory,
         );
       if (!matchesActionExecution(executionDirectory, tabId, adoptedExecutionId)) {
         subscription.close();
@@ -1126,7 +1127,7 @@ export const ProjectActionsButton = ({
               className={cn(
                 'app-region-no-drag inline-flex h-9 w-9 items-center justify-center rounded-[10px] [corner-shape:squircle] supports-[corner-shape:squircle]:rounded-[50px] p-2',
                 'typography-ui-label font-medium text-muted-foreground hover:bg-interactive-hover hover:text-foreground transition-colors',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 'disabled:cursor-not-allowed',
                 className
               )}
@@ -1151,7 +1152,7 @@ export const ProjectActionsButton = ({
             <TooltipTrigger asChild>
               <button
                 type="button"
-                className="app-region-no-drag -ml-1 inline-flex h-9 w-7 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-interactive-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="app-region-no-drag -ml-1 inline-flex h-9 w-7 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-interactive-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label={t('projectActions.actions.openPreview')}
                 onClick={handleOpenSelectedPreview}
               >
@@ -1165,7 +1166,7 @@ export const ProjectActionsButton = ({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="app-region-no-drag -ml-1 inline-flex h-9 w-5 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-interactive-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="app-region-no-drag -ml-1 inline-flex h-9 w-5 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-interactive-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label={t('projectActions.actions.chooseActionAria')}
             >
               <Icon name="arrow-down-s" className="h-3.5 w-3.5" />
@@ -1232,7 +1233,7 @@ export const ProjectActionsButton = ({
             className={cn(
               'inline-flex h-full items-center justify-center typography-ui-label font-medium text-foreground hover:bg-interactive-hover',
               compact ? 'w-9 px-0' : 'px-2.5',
-              'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed'
+              'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed'
             )}
             aria-label={selectedRunning
               ? t('projectActions.actions.stopNamedAria', { name: resolvedSelected.name })
@@ -1261,7 +1262,7 @@ export const ProjectActionsButton = ({
               className={cn(
                 compact ? 'inline-flex h-full w-8 items-center justify-center' : 'inline-flex h-full w-7 items-center justify-center',
                 'border-l border-[var(--interactive-border)] text-foreground',
-                'hover:bg-interactive-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary'
+                'hover:bg-interactive-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
               )}
               aria-label={t('projectActions.actions.openPreview')}
             >
@@ -1279,7 +1280,7 @@ export const ProjectActionsButton = ({
             className={cn(
               compact ? 'inline-flex h-full w-8 items-center justify-center' : 'inline-flex h-full w-7 items-center justify-center',
               'border-l border-[var(--interactive-border)] text-muted-foreground',
-              'hover:bg-interactive-hover hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary'
+              'hover:bg-interactive-hover hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
             )}
             aria-label={t('projectActions.actions.chooseActionAria')}
           >

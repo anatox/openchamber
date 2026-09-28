@@ -1,4 +1,5 @@
 import { substituteCommandVariables } from '@/lib/openchamberConfig';
+import { getRuntimeKey, subscribeRuntimeEndpointChanged } from '@/lib/runtime-switch';
 import { toast } from '@/components/ui';
 import { formatMessage, useI18nStore } from '@/lib/i18n';
 import type { WorktreeMetadata } from '@/types/worktree';
@@ -496,6 +497,16 @@ const invalidateWorktreeList = (projectDirectory: string): void => {
   _worktreeListCache.delete(projectDirectory);
 };
 
+// The list and root caches are keyed by path, and two instances can have a
+// project at the same path. Bumping every generation also makes a read still
+// in flight against the previous instance retry instead of caching its answer.
+subscribeRuntimeEndpointChanged(() => {
+  const directories = new Set([..._worktreeListGeneration.keys(), ..._worktreeListCache.keys(), ..._worktreeListInflight.keys()]);
+  for (const directory of directories) invalidateWorktreeList(directory);
+  _worktreeListInflight.clear();
+  invalidateResolvedProjectRootCache();
+});
+
 const readProjectWorktrees = async (projectDirectory: string): Promise<WorktreeMetadata[]> => {
   const metadataProjectDirectory = await resolveProjectRoot(projectDirectory).catch(() => projectDirectory);
   const normalizedProjectDirectory = normalizePath(projectDirectory);
@@ -611,11 +622,18 @@ export type CreateWorktreeArgs = {
 };
 
 export async function createWorktree(project: ProjectRef, args: CreateWorktreeArgs): Promise<WorktreeMetadata> {
+  const runtime = getRuntimeKey();
+  let cancelled = false;
+  const unsubscribe = subscribeRuntimeEndpointChanged(() => { cancelled = true; });
+  const assertCurrent = () => { if (cancelled || getRuntimeKey() !== runtime) throw new Error('Server changed during worktree creation'); };
+  try {
   const projectDirectory = normalizePath(project.path);
   const metadataProjectDirectory = await resolveProjectRoot(projectDirectory).catch(() => projectDirectory);
+  assertCurrent();
   const payload = toCreatePayload(args, projectDirectory);
 
   const created = await git.worktree.create(projectDirectory, payload);
+  assertCurrent();
   if (created?.sourceFetchFailed) {
     toast.warning(
       formatMessage(useI18nStore.getState().dictionary, 'session.newWorktree.toast.fetchSourceFailed'),
@@ -692,6 +710,9 @@ export async function createWorktree(project: ProjectRef, args: CreateWorktreeAr
   });
 
   return metadata;
+  } finally {
+    unsubscribe();
+  }
 }
 
 export async function validateWorktreeCreate(project: ProjectRef, args: CreateWorktreeArgs): Promise<GitWorktreeValidationResult> {

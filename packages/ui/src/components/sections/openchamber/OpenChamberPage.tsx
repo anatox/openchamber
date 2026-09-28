@@ -2,6 +2,7 @@ import React from 'react';
 import { OpenChamberVisualSettings } from './OpenChamberVisualSettings';
 import { AboutSettings } from './AboutSettings';
 import { SessionRetentionSettings } from './SessionRetentionSettings';
+import { SessionWorkSettings } from './SessionWorkSettings';
 import { PasskeySettings } from './PasskeySettings';
 import { AppLinkSecuritySettings } from './AppLinkSecuritySettings';
 import { DefaultsSettings } from './DefaultsSettings';
@@ -10,6 +11,8 @@ import { NotificationSettings } from './NotificationSettings';
 import { VoiceSettings } from './VoiceSettings';
 import { TunnelSettings } from './TunnelSettings';
 import { OpenCodeCliSettings } from './OpenCodeCliSettings';
+import { IsolatedSpacesSettings } from './IsolatedSpacesSettings';
+import { ISOLATED_SPACES_RELEASED } from '@/lib/spaces/release';
 import { OpenChamberToolsSettings } from './OpenChamberToolsSettings';
 import { DesktopNetworkSettings } from './DesktopNetworkSettings';
 import { KeyboardShortcutsSettings } from './KeyboardShortcutsSettings';
@@ -42,7 +45,6 @@ export const OpenChamberPage: React.FC<OpenChamberPageProps> = ({ section }) => 
     const runtimeEndpointEpoch = useRuntimeEndpointEpoch();
     const showAbout = isMobile && isWebRuntime();
     const isVSCode = isVSCodeRuntime();
-    void runtimeEndpointEpoch;
     const showDesktopNetworkSettings = isDesktopShell() && isDesktopLocalOriginActive();
 
     // If no section specified, show all (mobile/legacy behavior)
@@ -50,10 +52,12 @@ export const OpenChamberPage: React.FC<OpenChamberPageProps> = ({ section }) => 
         return (
             <SettingsPageLayout showSaveStatus className="openchamber-page-body space-y-3 sm:space-y-6">
                 <OpenChamberVisualSettings />
-                <DefaultsSettings />
+                <DefaultsSettings key={runtimeEndpointEpoch} />
+                <SessionWorkSettings />
                 {showDesktopNetworkSettings && <DesktopNetworkSettings />}
                 {!isVSCode && <OpenCodeCliSettings />}
                 {!isVSCode && <OpenChamberToolsSettings />}
+                {!isVSCode && ISOLATED_SPACES_RELEASED && <IsolatedSpacesSettings />}
                 <SessionRetentionSettings />
                 <AppLinkSecuritySettings />
                 {isWebRuntime() && !isDesktopShell() && !isVSCode && !isCapacitorApp() && <PasskeySettings />}
@@ -72,7 +76,7 @@ export const OpenChamberPage: React.FC<OpenChamberPageProps> = ({ section }) => 
             case 'chat':
                 return <ChatSectionContent />;
             case 'sessions':
-                return <SessionsSectionContent />;
+                return <SessionsSectionContent runtimeEndpointEpoch={runtimeEndpointEpoch} />;
             case 'shortcuts':
                 return <ShortcutsSectionContent />;
             case 'git':
@@ -147,6 +151,7 @@ const GeneralSectionContent: React.FC = () => {
             <AppLinkSecuritySettings />
             {!isVSCode && <OpenCodeCliSettings />}
             {!isVSCode && <OpenChamberToolsSettings />}
+            {!isVSCode && ISOLATED_SPACES_RELEASED && <IsolatedSpacesSettings />}
             <OpenChamberVisualSettings visibleSettings={[
                 'fileEditorKeymap',
                 ...(!isVSCode ? ['sessionTabs' as const] : []),
@@ -178,12 +183,12 @@ const VisualSectionContent: React.FC = () => {
         'spacing',
         'scrollbars',
         'inputBarOffset',
+        'animatedActivityIndicators',
     ]} />;
 };
 
 // Chat section: User message rendering, Diff layout, Mobile status bar, Show reasoning traces, Follow-up behavior, Persist draft
 const ChatSectionContent: React.FC = () => {
-    const isVSCode = isVSCodeRuntime();
     return (
         <OpenChamberVisualSettings
             visibleSettings={[
@@ -199,7 +204,7 @@ const ChatSectionContent: React.FC = () => {
                 'expandedTools',
                 'collapsibleUserMessages',
                 'stickyUserHeader',
-                ...(!isVSCode ? ['promptNavigatorEnabled' as const] : []),
+                'promptNavigatorEnabled',
                 'wideChatLayout',
                 'codeBlockLineWrap',
                 'splitAssistantMessageActions',
@@ -220,10 +225,11 @@ const ChatSectionContent: React.FC = () => {
 };
 
 // Sessions section: Default model & agent, Session retention
-const SessionsSectionContent: React.FC = () => {
+const SessionsSectionContent: React.FC<{ runtimeEndpointEpoch: number }> = ({ runtimeEndpointEpoch }) => {
     return (
         <>
-            <DefaultsSettings />
+            <DefaultsSettings key={runtimeEndpointEpoch} />
+            <SessionWorkSettings />
             <SessionRetentionSettings />
         </>
     );
